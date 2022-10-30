@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import e from "express";
+
 
 const resizeImage = async (
   file: string,

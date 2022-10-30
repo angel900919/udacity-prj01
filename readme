@@ -1,5 +1,6 @@
 To test the app please access the following endpoint follow by the image name and width and height:
 
+example:
 http://localhost:3000/api/images?filename=fjord&width=500&height=900
 
 The server won’t resize if the image already exists.

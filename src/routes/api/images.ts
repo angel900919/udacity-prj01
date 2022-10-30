@@ -4,7 +4,7 @@ import { processingImage } from '../../utils/processingImage';
 
 images.get(
   '/',
-   processingImage,
+  processingImage,
   (req: express.Request, res: express.Response) => {
     res.send('ok');
   }

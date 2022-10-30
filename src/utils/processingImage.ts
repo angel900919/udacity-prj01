@@ -57,5 +57,3 @@ const processingImage = async (
 };
 
 export { processingImage };
-
-
