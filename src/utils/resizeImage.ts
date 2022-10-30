@@ -1,18 +1,31 @@
 import sharp from 'sharp';
+import e from "express";
 
+const resizeImage = async (
+  file: string,
+  width: number,
+  height: number,
+  destinationPath: string
+): Promise<void> => {
+  const imageOriginal = sharp(file);
+  await imageOriginal
+    .resize({ width: width, height: height })
+    .toFile(destinationPath);
+};
 
-const resizeImage = async (file: string, width:number, height:number, destinationPath: string):Promise<void> => {
+const imageExist = async (
+  path: string,
+  width: number,
+  height: number
+): Promise<boolean> => {
+  const image = sharp(path);
+  const metadata = await image.metadata();
 
-    const imageOriginal = sharp(file);
-    await imageOriginal
-        .resize({ width: width, height: height })
-        .toFile(destinationPath)
+  if (width === metadata.width && height === metadata.height) {
+    return true;
+  } else {
+    return false;
+  }
+};
 
-}
-
-const imageExist = (path:string) => {
-
-}
-
-
-export {resizeImage};
+export { resizeImage, imageExist };

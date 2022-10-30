@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { existsSync } from 'node:fs';
-import sharp from 'sharp';
+import { resizeImage, imageExist } from './resizeImage';
 
 const processingImage = async (
   req: express.Request,
@@ -19,28 +19,32 @@ const processingImage = async (
 
   try {
     if (filename && existsSync(originalPath)) {
-
-      const imageOriginal = sharp(originalPath);
-
       if (existsSync(thumbPath)) {
-        const image = sharp(thumbPath);
-        const metadata = await image.metadata();
+        const imageFileExist = await imageExist(
+          thumbPath,
+          widthFromPath,
+          heightFromPath
+        );
 
-        if ( widthFromPath === metadata.width && metadata.height === heightFromPath) {
-
+        if (imageFileExist) {
           res.sendFile(imagePath);
-
         } else {
-
-          await imageOriginal
-            .resize({ width: widthFromPath, height: heightFromPath })
-            .toFile(thumbPath)
+          await resizeImage(
+            originalPath,
+            widthFromPath,
+            heightFromPath,
+            thumbPath
+          );
           res.sendFile(imagePath);
         }
       } else {
-        await imageOriginal
-            .resize({ width: widthFromPath, height: heightFromPath })
-            .toFile(thumbPath)
+        await resizeImage(
+          originalPath,
+          widthFromPath,
+          heightFromPath,
+          thumbPath
+        );
+
         res.sendFile(imagePath);
       }
     } else {
@@ -53,3 +57,5 @@ const processingImage = async (
 };
 
 export { processingImage };
+
+

@@ -13,6 +13,4 @@ describe('Test endpoint responses', () => {
     const response = await request.get('/api/images');
     expect(response.status).toBe(200);
   });
-
-
 });

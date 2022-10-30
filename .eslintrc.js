@@ -7,4 +7,12 @@ module.exports = {
     },
     plugins: ['@typescript-eslint'],
     root: true,
+    rules: {
+        "@typescript-eslint/no-misused-promises": [
+            "error",
+            {
+                "checksVoidReturn": false
+            }
+        ]
+    }
 };
