@@ -20,6 +20,11 @@ const processingImage = async (
   try {
     if (filename && existsSync(originalPath)) {
       if (existsSync(thumbPath)) {
+
+        if(!widthFromPath && !heightFromPath){
+          throw new Error('Incorrect ImageSize or typo');
+        }
+
         const imageFileExist = await imageExist(
           thumbPath,
           widthFromPath,
@@ -38,6 +43,10 @@ const processingImage = async (
           res.sendFile(imagePath);
         }
       } else {
+
+        if(!widthFromPath && !heightFromPath){
+          throw new Error('Incorrect ImageSize or typo');
+        }
         await resizeImage(
           originalPath,
           widthFromPath,
@@ -48,10 +57,10 @@ const processingImage = async (
         res.sendFile(imagePath);
       }
     } else {
-      res.send('Incorrect File Name');
+      throw new Error('File does not exist')
     }
   } catch (err) {
-    res.status(404).send(err);
+    res.send(err);
     console.log(err);
   }
 };
