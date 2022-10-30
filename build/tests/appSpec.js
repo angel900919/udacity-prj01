@@ -20,4 +20,8 @@ describe('Test endpoint responses', () => {
         const response = yield request.get('/api');
         expect(response.status).toBe(200);
     }));
+    it('gets the api/images endpoint', () => __awaiter(void 0, void 0, void 0, function* () {
+        const response = yield request.get('/api/images');
+        expect(response.status).toBe(200);
+    }));
 });
