@@ -1,104 +1,55 @@
 import express from 'express';
 const images = express.Router();
-import Jimp from 'jimp';
 import sizeOf from 'image-size';
-import {promises as fsPromises} from 'fs';
-import {access, constants} from 'fs';
-import resizeImage from "../../utils/imageProcessing";
-import path from "path";
-
+import { access, constants } from 'fs';
+import { resizeImage } from '../../utils/imageProcessing';
+import path from 'path';
+import { existsSync } from 'node:fs';
 
 images.get('/', (req: express.Request, res: express.Response) => {
+  const filename: string =
+    typeof req.query.filename === 'string' ? req.query.filename : '';
+  const thumbPath = `./assets/thumb/${filename}_thumb.jpg`;
+  const originalPath = `./assets/full/${filename}.jpg`;
+  const width: number =
+    typeof req.query.width === 'string' ? parseInt(req.query.width) : 0;
+  const height: number =
+    typeof req.query.height === 'string' ? parseInt(req.query.height) : 0;
+  const imagePath = path.join(process.cwd(), thumbPath);
 
-    const url = req.url;
-    const filename = req.query.filename;
-    const thumbPath = `./assets/thumb/${filename}_thumb.jpg`;
-    const originalPath = `./assets/full/${filename}.jpg`;
-    const widthPath= req.query.width;
-    const heightPath = req.query.height;
-    let width:number = 0;
-    let height:number = 0;
-    const pathRoot = process.cwd();
-    const imagePath = path.join(pathRoot,thumbPath);
-
-        try {
-            if(filename) {
-                if (typeof (widthPath) === 'string') {
-                    width = parseInt(widthPath);
-                }
-                if (typeof (heightPath) === 'string') {
-                    height = parseInt(heightPath);
-                }
-
-                access(thumbPath, constants.F_OK, async(DoesNotExist)=>{
-                    if(!DoesNotExist){
-                        const image = sizeOf(thumbPath);
-
-                        if((image.height === height) && (image.width === width)){
-                            console.log("exists");
-                            res.sendFile(imagePath);
-                        }
-                        else {
-                            console.log("exists but different size");
-                            await resizeImage(originalPath, thumbPath, width, height).then(()=>res.sendFile(imagePath));
-
-                        }
-                    }
-                    else {
-                        console.log(" do not exists");
-                        await resizeImage(originalPath, thumbPath, width, height).then(()=>res.sendFile(imagePath));
-                        //res.sendFile(imagePath);
-                    }
-
-                });
-
-
+  try {
+    if (filename && existsSync(originalPath)) {
+      access(thumbPath, constants.F_OK, (DoesNotExist): void => {
+        if (!DoesNotExist) {
+          if (width && height) {
+            const image = sizeOf(thumbPath);
+            if (image.height === height && image.width === width) {
+              res.sendFile(imagePath);
+            } else {
+              (async () => {
+                await resizeImage(originalPath, thumbPath, width, height).then(
+                  () => res.sendFile(imagePath)
+                );
+              })();
             }
+          } else {
+            res.status(404).send('width, height needs to be higher than 0 ');
+          }
+        } else {
+          (async () => {
+            await resizeImage(originalPath, thumbPath, width, height).then(() =>
+              res.sendFile(imagePath)
+            );
+          })();
         }
-        catch (err){
-            console.log(err)
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //res.sendFile('path')
-
-
+      });
+    } else {
+      res.status(404).send('Incorrect File Name');
+    }
+  } catch (err) {
+    res.status(404).send(err);
+    console.log(err);
+  }
 });
-
-
-// const writeData = async () => {
-//     try {
-//         let newFile = await fsPromises.writeFile('file.txt', 'hello world');
-//     } catch (err) {
-//         console.log(err);
-//     }
-// }
-
-//move new file
-
-// const moveData = async () => {
-//
-//     try {
-//         const moveImage = await fsPromises.rename('./assets/full/image.jpeg', './assets/thumb/newimage.jpeg');
-//     }
-//     catch (err){
-//         console.log(err);
-//     }
-//
-// }
-
-
-
 
 export default images;
