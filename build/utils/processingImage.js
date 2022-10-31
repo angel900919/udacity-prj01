@@ -16,37 +16,67 @@ exports.processingImage = void 0;
 const path_1 = __importDefault(require("path"));
 const node_fs_1 = require("node:fs");
 const resizeImage_1 = require("./resizeImage");
+const onlyNumbersCheck_1 = __importDefault(require("./onlyNumbersCheck"));
 const processingImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const filename = typeof req.query.filename === 'string' ? req.query.filename : '';
     const thumbPath = `./assets/thumb/${filename}_thumb.jpg`;
     const originalPath = `./assets/full/${filename}.jpg`;
-    const widthFromPath = typeof req.query.width === 'string' ? parseInt(req.query.width) : 0;
-    const heightFromPath = typeof req.query.height === 'string' ? parseInt(req.query.height) : 0;
+    const widthFromPath = req.query.width;
+    const heightFromPath = req.query.height;
     const imagePath = path_1.default.join(process.cwd(), thumbPath);
+    const width_height = typeof widthFromPath === 'string' && typeof heightFromPath === 'string';
+    let width = 0;
+    let height = 0;
     try {
-        if (filename && (0, node_fs_1.existsSync)(originalPath)) {
-            if ((0, node_fs_1.existsSync)(thumbPath)) {
-                const imageFileExist = yield (0, resizeImage_1.imageExist)(thumbPath, widthFromPath, heightFromPath);
-                if (imageFileExist) {
-                    res.sendFile(imagePath);
-                }
-                else {
-                    yield (0, resizeImage_1.resizeImage)(originalPath, widthFromPath, heightFromPath, thumbPath);
-                    res.sendFile(imagePath);
-                }
+        //error handling
+        if (!filename) {
+            throw new Error('Incorrect file Name');
+        }
+        if (!(0, node_fs_1.existsSync)(originalPath)) {
+            throw new Error('file does not exits');
+        }
+        if (!widthFromPath || !heightFromPath || !width_height) {
+            throw new Error('Missing Width/height');
+        }
+        if (typeof widthFromPath === 'string') {
+            if (!(0, onlyNumbersCheck_1.default)(widthFromPath)) {
+                //res.send('width can only contain integers');
+                throw new Error('width can only contain integers');
+            }
+        }
+        if (typeof heightFromPath === 'string') {
+            if (!(0, onlyNumbersCheck_1.default)(heightFromPath)) {
+                // res.send('height can only contain integers');
+                throw new Error('height can only contain integers');
+            }
+        }
+        //functionality start here
+        if (typeof widthFromPath === 'string') {
+            width = parseInt(widthFromPath);
+        }
+        if (typeof heightFromPath === 'string') {
+            height = parseInt(heightFromPath);
+        }
+        if ((0, node_fs_1.existsSync)(thumbPath)) {
+            const imageFileExist = yield (0, resizeImage_1.imageExist)(thumbPath, width, height);
+            if (imageFileExist) {
+                res.sendFile(imagePath);
             }
             else {
-                yield (0, resizeImage_1.resizeImage)(originalPath, widthFromPath, heightFromPath, thumbPath);
+                yield (0, resizeImage_1.resizeImage)(originalPath, width, height, thumbPath);
                 res.sendFile(imagePath);
             }
         }
         else {
-            res.send('Incorrect File Name');
+            yield (0, resizeImage_1.resizeImage)(originalPath, width, height, thumbPath);
+            res.sendFile(imagePath);
         }
     }
     catch (err) {
-        res.status(404).send(err);
-        console.log(err);
+        if (err instanceof Error) {
+            res.send(err.message);
+            console.log(err.message);
+        }
     }
 });
 exports.processingImage = processingImage;

@@ -1,6 +1,5 @@
 import sharp from 'sharp';
 
-
 const resizeImage = async (
   file: string,
   width: number,

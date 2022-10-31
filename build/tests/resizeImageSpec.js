@@ -11,15 +11,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const resizeImage_1 = require("../utils/resizeImage");
 describe('Test Resize Module', () => {
-    const widthFromPath = 500;
-    const heightFromPath = 900;
+    const width = 500;
+    const height = 900;
     const thumbPath = './assets/thumb/fjord_thumb.jpg';
+    const originalPath = './assets/full/encenadaport.jpg';
     it('check if an image does not exist', () => __awaiter(void 0, void 0, void 0, function* () {
-        const imageFileExist = yield (0, resizeImage_1.imageExist)(thumbPath, widthFromPath, heightFromPath + 200);
+        const imageFileExist = yield (0, resizeImage_1.imageExist)(thumbPath, width, height + 200);
         expect(imageFileExist).toEqual(false);
     }));
-    it('check if an image exist', () => __awaiter(void 0, void 0, void 0, function* () {
-        const imageFileExist = yield (0, resizeImage_1.imageExist)(thumbPath, widthFromPath, heightFromPath);
-        expect(imageFileExist).toEqual(true);
-    }));
+    it('check if the image is Processed without errors', () => {
+        expect(() => __awaiter(void 0, void 0, void 0, function* () {
+            yield (0, resizeImage_1.resizeImage)(originalPath, width, height, thumbPath);
+        })).not.toThrow();
+    });
 });

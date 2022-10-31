@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { existsSync } from 'node:fs';
 import { resizeImage, imageExist } from './resizeImage';
+import containsOnlyNumbers from './onlyNumbersCheck';
 
 const processingImage = async (
   req: express.Request,
@@ -9,59 +10,69 @@ const processingImage = async (
 ): Promise<void> => {
   const filename: string =
     typeof req.query.filename === 'string' ? req.query.filename : '';
+
   const thumbPath = `./assets/thumb/${filename}_thumb.jpg`;
   const originalPath = `./assets/full/${filename}.jpg`;
-  const widthFromPath: number =
-    typeof req.query.width === 'string' ? parseInt(req.query.width) : 0;
-  const heightFromPath: number =
-    typeof req.query.height === 'string' ? parseInt(req.query.height) : 0;
+  const widthFromPath = req.query.width;
+  const heightFromPath = req.query.height;
   const imagePath = path.join(process.cwd(), thumbPath);
+  const width_height: boolean =
+    typeof widthFromPath === 'string' && typeof heightFromPath === 'string';
+  let width = 0;
+  let height = 0;
 
   try {
-    if (filename && existsSync(originalPath)) {
-      if (existsSync(thumbPath)) {
+    //error handling
+    if (!filename) {
+      throw new Error('Incorrect file Name');
+    }
+    if (!existsSync(originalPath)) {
+      throw new Error('file does not exits');
+    }
+    if (!widthFromPath || !heightFromPath || !width_height) {
+      throw new Error('Missing Width/height');
+    }
+    if (typeof widthFromPath === 'string') {
+      if (!containsOnlyNumbers(widthFromPath)) {
+        //res.send('width can only contain integers');
+        throw new Error('width can only contain integers');
+      }
+    }
+    if (typeof heightFromPath === 'string') {
+      if (!containsOnlyNumbers(heightFromPath)) {
+        // res.send('height can only contain integers');
+        throw new Error('height can only contain integers');
+      }
+    }
 
-        if(!widthFromPath && !heightFromPath){
-          throw new Error('Incorrect ImageSize or typo');
-        }
+    //functionality start here
 
-        const imageFileExist = await imageExist(
-          thumbPath,
-          widthFromPath,
-          heightFromPath
-        );
+    if (typeof widthFromPath === 'string') {
+      width = parseInt(widthFromPath);
+    }
+    if (typeof heightFromPath === 'string') {
+      height = parseInt(heightFromPath);
+    }
 
-        if (imageFileExist) {
-          res.sendFile(imagePath);
-        } else {
-          await resizeImage(
-            originalPath,
-            widthFromPath,
-            heightFromPath,
-            thumbPath
-          );
-          res.sendFile(imagePath);
-        }
+    if (existsSync(thumbPath)) {
+      const imageFileExist = await imageExist(thumbPath, width, height);
+
+      if (imageFileExist) {
+        res.sendFile(imagePath);
       } else {
-
-        if(!widthFromPath && !heightFromPath){
-          throw new Error('Incorrect ImageSize or typo');
-        }
-        await resizeImage(
-          originalPath,
-          widthFromPath,
-          heightFromPath,
-          thumbPath
-        );
-
+        await resizeImage(originalPath, width, height, thumbPath);
         res.sendFile(imagePath);
       }
     } else {
-      throw new Error('File does not exist')
+      await resizeImage(originalPath, width, height, thumbPath);
+
+      res.sendFile(imagePath);
     }
   } catch (err) {
-    res.send(err);
-    console.log(err);
+    if (err instanceof Error) {
+      res.send(err.message);
+      console.log(err.message);
+    }
   }
 };
 
